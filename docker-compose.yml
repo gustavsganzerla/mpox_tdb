@@ -1,0 +1,35 @@
+
+
+services:
+  web:
+    build:
+      context: ./frontend
+    command: python manage.py runserver 0.0.0.0:8000
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./frontend:/app
+      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/cssr:/data_cssr
+      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/issr:/data_issr
+      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/ssr:/data_ssr
+      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/vntr:/data_vntr
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mydb
+      POSTGRES_USER: myuser
+      POSTGRES_PASSWORD: mypassword
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  pgdata:
+
+

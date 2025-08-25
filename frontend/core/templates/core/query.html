@@ -1,0 +1,587 @@
+{% extends 'base.html'%}
+
+
+{% block content %}
+
+<style>
+  .forms-container {
+    display: flex;
+    gap: 20px; /* space between forms */
+    align-items: flex-start; /* top-align them */
+  }
+
+  #query-form-1 {
+    flex: 1; /* share available space equally */
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-sizing: border-box; /* keep padding inside width */
+  }
+  #query-form-2 {
+    flex: 1; /* share available space equally */
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-sizing: border-box; /* keep padding inside width */
+  }
+  #query-form-3 {
+    flex: 1; /* share available space equally */
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    box-sizing: border-box; /* keep padding inside width */
+  }
+
+  .indent-field {
+    margin-left: 20px;
+    margin-bottom: 10px;
+  }
+
+  label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+  }
+
+  .btn {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #2b4f66;
+    color: #fff;
+    border-radius: 6px;
+    text-decoration: none;
+    margin-top: 1rem;
+  }
+  
+  .btn:hover {
+    background: #0056b3;
+  }
+</style>
+
+<div class='content'>
+    <h1>Search in our database </h1>
+    <div class="forms-container">
+
+        <form id="query-form-1" method="post">
+          <h2>Non-specific search </h2>
+            {% csrf_token %}
+            <label for="{{ form.sequence_type.id_for_label }}"></label>
+            {{ form.sequence_type.label_tag }}
+            {{ form.sequence_type }}
+
+          
+            <div class="indent-field">
+                {{ form.clade.label_tag }}
+                {{ form.clade }}
+              </div>
+            
+              <div class="indent-field">
+                {{ form.subclade.label_tag }}
+                {{ form.subclade }}
+              </div>
+          
+            <div class="indent-field" id="type-field" style="display: none;">
+              {{ form.type.label_tag }}
+              {{ form.type }}
+            </div>
+          
+
+            <div class="indent-field">
+                <button type="submit" class='btn'>Search</button>
+              </div>
+          </form>
+
+
+          <form id="query-form-3" method="post">
+            <h2>Genome-specific search </h2>
+            {% csrf_token %}
+        
+            <div>
+                <label for="new_sequence_type">Sequence Type:</label>
+                <select id="new_sequence_type" name="sequence_type">
+                    <option value="cssr" selected>CSSR</option>
+                    <option value="issr">ISSR</option>
+                    <option value="ssr">SSR</option>
+                    <option value="vntr">VNTR</option>
+                </select>
+            </div>
+        
+            <div>
+                <label for="new_sequence">Genome:</label>
+                <input type="text" id="new_sequence" name="raw_sequence" list="new_sequence_list">
+                <datalist id="new_sequence_list"></datalist>
+            </div>
+        
+            <div>
+                <button type="submit" class='btn'>Search</button>
+            </div>
+        </form>
+        </div>
+    
+
+    <div id="results-count"></div>
+
+    <div class="indent-field">
+      <button type="reset" id="reset-form" class='btn'>Reset</button>
+    </div>
+
+    <div id="results"></div> <!-- where the rendered table will be shown -->
+
+</div>
+
+
+<script>
+  //clear the forms
+  document.addEventListener("DOMContentLoaded", () => {
+    const form1 = document.getElementById("query-form-1");
+    const outputDiv = document.getElementById("results");
+    const form3 = document.getElementById("query-form-3");
+
+    const clearBtn = document.getElementById("reset-form");
+
+    clearBtn.addEventListener("click", () => {
+      form1.reset();
+      form3.reset();
+      outputDiv.innerHTML = "";
+
+      const dataLists = form3.querySelectorAll('datalist');
+      dataLists.forEach(dl => dataList.innerHTML = "");
+    });  
+  });
+
+</script>
+
+<script>
+  //genome specific
+  document.addEventListener("DOMContentLoaded", function() {
+      const input = document.getElementById("new_sequence");
+      const seqTypeField = document.getElementById("new_sequence_type");
+      const dataList = document.getElementById("new_sequence_list");
+      const csrf = document.querySelector("[name=csrfmiddlewaretoken]").value;
+      const form = document.getElementById("query-form-3");
+      const outputDiv = document.getElementById("results");
+  
+      // --- Autocomplete ---
+      function fetchAutocomplete() {
+          const sequence = input.value.trim();
+          const sequence_type = seqTypeField.value;
+  
+          if (!sequence) {
+              dataList.innerHTML = "";
+              return;
+          }
+  
+          const fd = new FormData();
+          fd.append("raw_sequence", sequence);
+          fd.append("sequence_type", sequence_type);
+  
+          fetch("{% url 'autocomplete' %}", {
+              method: "POST",
+              headers: { "X-CSRFToken": csrf },
+              body: fd
+          })
+          .then(res => res.json())
+          .then(data => {
+              dataList.innerHTML = "";
+              (data.results || []).forEach(obj => {
+                  const opt = document.createElement("option");
+                  opt.value = obj.sequence;
+                  dataList.appendChild(opt);
+              });
+          })
+          .catch(err => console.error("Autocomplete fetch error:", err));
+      }
+  
+      input.addEventListener("input", fetchAutocomplete);
+      seqTypeField.addEventListener("change", fetchAutocomplete);
+  
+      // --- Fetch and render paginated results ---
+      function fetchPage(url) {
+          fetch(url)
+          .then(res => res.json())
+          .then(data => {
+              outputDiv.innerHTML = "";
+  
+              if (!data.results || data.results.length === 0) {
+                  outputDiv.innerHTML = "<p>No results found.</p>";
+                  return;
+              }
+  
+              // Table
+              const table = document.createElement("table");
+              table.style.borderCollapse = "collapse";
+              table.style.width = "100%";
+  
+              const thead = document.createElement("thead");
+              const headerRow = document.createElement("tr");
+              Object.keys(data.results[0]).forEach(col => {
+                  const th = document.createElement("th");
+                  th.textContent = col;
+                  th.style.border = "1px solid #ccc";
+                  th.style.padding = "6px";
+                  th.style.backgroundColor = "#f2f2f2";
+                  headerRow.appendChild(th);
+              });
+              thead.appendChild(headerRow);
+              table.appendChild(thead);
+  
+              const tbody = document.createElement("tbody");
+              data.results.forEach(item => {
+                  const row = document.createElement("tr");
+                  Object.keys(item).forEach(col => {
+                      const td = document.createElement("td");
+                      td.textContent = item[col];
+                      td.style.border = "1px solid #ccc";
+                      td.style.padding = "6px";
+                      row.appendChild(td);
+                  });
+                  tbody.appendChild(row);
+              });
+              table.appendChild(tbody);
+              outputDiv.appendChild(table);
+  
+              // --- CSV Download ---
+              const downloadBtn = document.createElement("button");
+              downloadBtn.textContent = "Download CSV";
+              downloadBtn.style.marginTop = "10px";
+              downloadBtn.classList.add("btn");
+              downloadBtn.onclick = () => {
+                  const params = new URLSearchParams();
+
+                  if (seqTypeField.value) params.append("sequence_type", seqTypeField.value);
+                  if (input.value.trim()) params.append("sequence", input.value.trim());
+
+                  const a = document.createElement("a");
+                  a.href = `/download/sequence/?${params.toString()}`;
+                  a.download = "";
+                  a.style.display = "none";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+              };
+              outputDiv.appendChild(downloadBtn);
+
+  
+              // --- Pagination ---
+              const count = data.count || data.results.length;
+              const pageSize = 10;
+              const totalPages = Math.ceil(count / pageSize);
+              const currentPage = parseInt(new URL(url, window.location.origin).searchParams.get("page") || "1");
+  
+              const paginationDiv = document.createElement("div");
+              paginationDiv.style.marginTop = "10px";
+  
+              // Previous
+              if (currentPage > 1) {
+                  ["First", "Previous"].forEach((text, i) => {
+                      const btn = document.createElement("button");
+                      btn.textContent = text;
+                      btn.dataset.page = i === 0 ? 1 : currentPage - 1;
+                      paginationDiv.appendChild(btn);
+                  });
+              }
+  
+              // Page numbers
+              let startPage = Math.max(1, currentPage - 2);
+              let endPage = Math.min(totalPages, currentPage + 2);
+              if (currentPage <= 3) endPage = Math.min(5, totalPages);
+              if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+  
+              for (let i = startPage; i <= endPage; i++) {
+                  const btn = document.createElement("button");
+                  btn.textContent = i;
+                  if (i === currentPage) btn.disabled = true;
+                  else btn.dataset.page = i;
+                  paginationDiv.appendChild(btn);
+              }
+  
+              // Next
+              if (currentPage < totalPages) {
+                  ["Next", "Last"].forEach((text, i) => {
+                      const btn = document.createElement("button");
+                      btn.textContent = text;
+                      btn.dataset.page = i === 0 ? currentPage + 1 : totalPages;
+                      paginationDiv.appendChild(btn);
+                  });
+              }
+  
+              outputDiv.appendChild(paginationDiv);
+  
+              // Pagination button events
+              paginationDiv.querySelectorAll("button[data-page]").forEach(button => {
+                  button.addEventListener("click", () => {
+                      const page = button.dataset.page;
+                      const params = new URLSearchParams();
+  
+                      // Map fields to API query params
+                      if (input.value.trim()) params.append("sequence", input.value.trim());
+                      if (seqTypeField.value) params.append("sequence_type", seqTypeField.value);
+  
+                      fetchPage(`/api/${seqTypeField.value}/?page=${page}&${params.toString()}`);
+                  });
+              });
+          })
+          .catch(err => console.error("API fetch error:", err));
+      }
+  
+      // --- Form submit ---
+      form.addEventListener("submit", function(event) {
+          event.preventDefault();
+          const params = new URLSearchParams();
+  
+          // Map form fields to API query params
+          if (input.value.trim()) params.append("sequence", input.value.trim());
+          if (seqTypeField.value) params.append("sequence_type", seqTypeField.value);
+  
+          fetchPage(`/api/${seqTypeField.value}/?${params.toString()}`);
+      });
+  
+      // Auto-submit on datalist selection
+      input.addEventListener("change", () => {
+          form.requestSubmit();
+      });
+  });
+</script>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById('query-form-1');
+    if (!form) return;
+  
+
+    let sequenceTypeField =
+      form.querySelector('#id_sequence_type, #new_sequence_type, [name="sequence_type"]');
+  
+    // If not inside the form (layout differences), try global lookup by id
+    if (!sequenceTypeField) {
+      sequenceTypeField =
+        document.querySelector('#id_sequence_type, #new_sequence_type, [name="sequence_type"]');
+    }
+  
+    // type-field container (prefer inside the form, else global)
+    let typeFieldDiv = form.querySelector('#type-field') || document.getElementById('type-field');
+  
+    if (!sequenceTypeField || !typeFieldDiv) {
+      console.warn('Missing elements:', { sequenceTypeField, typeFieldDiv });
+      return;
+    }
+  
+    const shouldShow = (val) => val === 'issr' || val === 'ssr';
+  
+    function updateFieldVisibility() {
+      const value = sequenceTypeField.value;
+      const show = shouldShow(value);
+  
+      typeFieldDiv.style.display = show ? 'block' : 'none';
+  
+      if (!show) {
+        // Clear any inputs/selects/textareas inside to avoid submitting stale values
+        typeFieldDiv.querySelectorAll('input, select, textarea').forEach(el => {
+          if (el.type === 'checkbox' || el.type === 'radio') {
+            el.checked = false;
+          } else {
+            el.value = '';
+          }
+        });
+      }
+    }
+  
+    // Initialize and bind
+    updateFieldVisibility();
+    sequenceTypeField.addEventListener('change', updateFieldVisibility);
+  });
+  </script>
+  
+
+<script>
+  //non-specific search
+  document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('query-form-1');
+    const resultsDiv = document.getElementById('results');
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  
+    const sequenceTypeField = document.querySelector('select[name="sequence_type"]');
+  
+    let selectedSequenceType = 'cssr';
+    let lastQueryParams = '';
+  
+    function getQueryParam(url, param) {
+      try {
+        const urlObj = new URL(url, window.location.origin);
+        return urlObj.searchParams.get(param);
+      } catch {
+        return null;
+      }
+    }
+  
+    function fetchPage(url) {
+      fetch(url, {
+        method: 'GET',
+        headers: { 'X-CSRFToken': csrfToken }
+      })
+        .then(response => response.json())
+        .then(data => {
+          resultsDiv.innerHTML = "";
+  
+          if (!data.results || data.results.length === 0) {
+            resultsDiv.innerHTML = `<p>No ${selectedSequenceType.toUpperCase()} records found.</p>`;
+            return;
+          }
+  
+          // ---- Build table with createElement style ----
+          const table = document.createElement('table');
+          table.style.borderCollapse = 'collapse';
+          table.style.width = '100%';
+  
+          const thead = document.createElement('thead');
+          const headerRow = document.createElement('tr');
+          const columns = Object.keys(data.results[0]);
+          columns.forEach(col => {
+            const th = document.createElement('th');
+            th.textContent = col;
+            th.style.border = '1px solid #ccc';
+            th.style.padding = '8px';
+            th.style.backgroundColor = '#f2f2f2';
+            headerRow.appendChild(th);
+          });
+          thead.appendChild(headerRow);
+          table.appendChild(thead);
+  
+          const tbody = document.createElement('tbody');
+          data.results.forEach(item => {
+            const row = document.createElement('tr');
+            columns.forEach(col => {
+              const td = document.createElement('td');
+              td.textContent = item[col];
+              td.style.border = '1px solid #ccc';
+              td.style.padding = '8px';
+              row.appendChild(td);
+            });
+            tbody.appendChild(row);
+          });
+          table.appendChild(tbody);
+  
+          resultsDiv.appendChild(table);
+  
+          // ---- Pagination controls ----
+          const count = data.count || data.results.length;
+          const pageSize = 10; // match your DRF pagination
+          const totalPages = Math.ceil(count / pageSize);
+          const currentPage = parseInt(getQueryParam(url, 'page') || '1');
+  
+          const paginationDiv = document.createElement('div');
+          paginationDiv.id = 'pagination-controls';
+          paginationDiv.style.marginTop = '10px';
+  
+          if (currentPage > 1) {
+            const firstBtn = document.createElement('button');
+            firstBtn.textContent = 'First';
+            firstBtn.dataset.page = 1;
+            paginationDiv.appendChild(firstBtn);
+  
+            const prevBtn = document.createElement('button');
+            prevBtn.textContent = 'Previous';
+            prevBtn.dataset.page = currentPage - 1;
+            paginationDiv.appendChild(prevBtn);
+          }
+  
+          let startPage = Math.max(1, currentPage - 2);
+          let endPage = Math.min(totalPages, currentPage + 2);
+          if (currentPage <= 3) endPage = Math.min(5, totalPages);
+          if (currentPage >= totalPages - 2) startPage = Math.max(1, totalPages - 4);
+  
+          for (let i = startPage; i <= endPage; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            if (i === currentPage) btn.disabled = true;
+            else btn.dataset.page = i;
+            paginationDiv.appendChild(btn);
+          }
+  
+          if (currentPage < totalPages) {
+            const nextBtn = document.createElement('button');
+            nextBtn.textContent = 'Next';
+            nextBtn.dataset.page = currentPage + 1;
+            paginationDiv.appendChild(nextBtn);
+  
+            const lastBtn = document.createElement('button');
+            lastBtn.textContent = 'Last';
+            lastBtn.dataset.page = totalPages;
+            paginationDiv.appendChild(lastBtn);
+          }
+  
+          resultsDiv.appendChild(paginationDiv);
+
+          // ---- Download CSV button ----
+          const downloadBtn = document.createElement('button');
+          downloadBtn.classList.add("btn");
+          downloadBtn.textContent = 'Download CSV';
+          downloadBtn.style.marginTop = '10px';
+          
+          downloadBtn.addEventListener('click', () => {
+            window.location.href = `/download/sequence/?sequence_type=${selectedSequenceType}&${lastQueryParams}`;
+          });
+          resultsDiv.appendChild(downloadBtn);
+  
+          // Attach events
+          paginationDiv.querySelectorAll('button[data-page]').forEach(button => {
+            button.addEventListener('click', () => {
+              const page = button.dataset.page;
+              fetchPage(`/api/${selectedSequenceType}/?page=${page}&${lastQueryParams}`);
+            });
+          });
+  
+        })
+        .catch(error => {
+          console.error(error);
+          resultsDiv.innerHTML = `<p style='color:red;'>Error fetching ${selectedSequenceType.toUpperCase()} data.</p>`;
+        });
+    }
+  
+    // Handle form submission
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+  
+      const formData = new FormData(form);
+      selectedSequenceType = formData.get('sequence_type');
+  
+      const allowedTypes = ['cssr', 'issr', 'ssr', 'vntr'];
+      if (!allowedTypes.includes(selectedSequenceType)) {
+        resultsDiv.innerHTML = `<p style='color:red;'>Invalid sequence type selected.</p>`;
+        return;
+      }
+  
+      const params = new URLSearchParams();
+      for (const [key, value] of formData.entries()) {
+        if (value && key !== 'sequence_type') params.append(key, value);
+      }
+      lastQueryParams = params.toString();
+  
+      fetchPage(`/api/${selectedSequenceType}/?${lastQueryParams}`);
+    });
+  });
+  </script>
+  
+
+
+
+  
+
+    
+  
+  
+
+
+
+
+
+
+
+
+
+
+  {% endblock %}

@@ -1,0 +1,168 @@
+{% extends 'base.html'%}
+
+
+{% block content %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>API Documentation</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f9fafb;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #2b4f66;
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+
+    main {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    section {
+      background: white;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    section h2 {
+      margin-top: 0;
+      font-size: 1.4rem;
+      border-bottom: 2px solid #f0f0f0;
+      padding-bottom: 0.5rem;
+      color: #007bff;
+    }
+
+    h3 {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: #444;
+    }
+
+    code, pre {
+      background: #f4f4f4;
+      font-family: monospace;
+      padding: 0.3rem 0.5rem;
+      border-radius: 6px;
+    }
+
+    pre {
+      padding: 1rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .endpoint {
+      background: #eef6ff;
+      border-left: 5px solid #007bff;
+      padding: 0.8rem;
+      margin: 1rem 0;
+      border-radius: 6px;
+      font-weight: bold;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
+    .error {
+      background: #ffe6e6;
+      border-left: 5px solid #e63946;
+      padding: 0.8rem;
+      border-radius: 6px;
+      margin: 0.5rem 0;
+    }
+  </style>
+</head>
+
+<div class='content'>
+<body>
+  <header>
+    <h1>API Documentation</h1>
+    <p>Base URL: <code>https://yourdomain.com/api/</code></p>
+  </header>
+
+
+
+  <main>
+    <!-- Overview -->
+    <section>
+      <h2>Overview</h2>
+      <p>This API provides access to the database resources used by the system. It supports searching, retrieving, and downloading datasets.</p>
+      <ul>
+        <li><strong>Format:</strong> JSON</li>
+        <li><strong>Authentication:</strong> Bearer Token (if enabled)</li>
+      </ul>
+    </section>
+
+    <!-- Authentication -->
+    <section>
+      <h2>Authentication</h2>
+      <p>Include your API token in the request header:</p>
+      <pre><code>Authorization: Bearer &lt;your_api_token&gt;</code></pre>
+    </section>
+
+    <!-- Example Endpoint -->
+    <section>
+      <h2>Search Endpoint</h2>
+      <div class="endpoint">GET /api/search/</div>
+
+      <h3>Parameters</h3>
+      <ul>
+        <li><code>q</code> (string, required) — Search keyword</li>
+        <li><code>limit</code> (integer, optional, default: 20) — Max results</li>
+        <li><code>offset</code> (integer, optional, default: 0) — Pagination</li>
+      </ul>
+
+      <h3>Example Request</h3>
+      <pre><code>GET /api/search/?q=geneX&amp;limit=10</code></pre>
+
+      <h3>Example Response</h3>
+      <pre><code>{
+  "count": 2,
+  "results": [
+    {
+      "id": 123,
+      "name": "GeneX",
+      "description": "Protein related to metabolism",
+      "created_at": "2025-08-21T10:12:00Z"
+    },
+    {
+      "id": 124,
+      "name": "GeneX2",
+      "description": "Homolog of GeneX",
+      "created_at": "2025-08-21T10:15:00Z"
+    }
+  ]
+}</code></pre>
+
+      <h3>Errors</h3>
+      <div class="error">400 Bad Request — Missing query parameter</div>
+      <div class="error">404 Not Found — No results found</div>
+    </section>
+  </main>
+</body>
+</html>
+</div>
+
+{% endblock%}

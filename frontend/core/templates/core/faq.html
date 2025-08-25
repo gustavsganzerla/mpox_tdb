@@ -1,0 +1,109 @@
+{% extends 'base.html'%}
+
+
+{% block content %}
+
+
+<style>
+
+    .faq-answer {
+        display: none;
+        padding: 0.5em 1em;
+      }
+      
+      .faq-question {
+        width: 100%;
+        text-align: left;
+        background: #f2f2f2;
+        border: none;
+        padding: 1em;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      
+      .faq-question.active + .faq-answer {
+        display: block;
+      }
+      
+
+</style>
+
+<div class='content'>
+<section class="faq">
+    <h2>Frequently Asked Questions</h2>
+  
+    <div class="faq-item">
+      <button class="faq-question">What is MpoxTDB?</button>
+      <div class="faq-answer">
+        <p>MpoxTDB is a comprehensive database of multiple types of tandem repeats predicted in the MPXV genomes that taxonomically belong to the two clades (I and II) and four subclades (Ia, Ib, IIa, and IIb).</p>
+      </div>
+    </div>
+
+  
+    <div class="faq-item">
+      <button class="faq-question">How many records do exist in MpoxTDB?</button>
+      <div class="faq-answer">
+        <p>As of August 2025, MpoxTDB contains a total of SSRs (52,682), cSSRs (1,408), ISSRs (726,636), and VNTRs (86,827) predicted in a total of 6,735 MPXV genomes.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+        <button class="faq-question">Why MpoxTDB is not any other database?</button>
+        <div class="faq-answer">
+          <p>There are multiple reports available on the short tandem repeats in the MPXV genomes. With no database available containing information on tandem repeats (SSRs, cSSRs, iSSRs, and VNTRs), we anticipate that this comprehensive database will serve as a Clade-wise compendium of SSRs, cSSRs, iSSRs, and VNTRs in the MPXV genomes.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">How can we contribute to this project?</button>
+        <div class="faq-answer">
+          <p>If you have a MPXV genome or list of the tandem repeats you can submit it to us through the Contact page. We will be happy to add your data to the MpoxTDB.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-question">How can I query and use the MpoxTDB database?</button>
+        <div class="faq-answer">
+          <p>MpoxTDB is a user-friendly database, for how to use you can go through the user manual available on the database website.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Can I download the entire database?</button>
+        <div class="faq-answer">
+          <p>Yes. We provide individual .csv files of the different tables in our database (CSSR, ISSR, SSR, and VNTR) for download.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">If the MPXV genome is already submitted to GISAID, can I find the record linked to MpoxTDB?</button>
+        <div class="faq-answer">
+          <p>Yes, you can search the MpoxTDB database using the GISAID accession number or you can query with specific keywords that match the description of the GISAID genome.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">Is there an Application Program Interface (API) for the MpoxTDB? This will allow us to link it to our webserver.</button>
+        <div class="faq-answer">
+          <p>We are working on and soon it will be available</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-question">How often will MpoxTDB be updated?</button>
+        <div class="faq-answer">
+          <p>The MpoxTDB will be updated biannually, contingent upon the availability of newly released MPXV genome sequences in public repositories.</p>
+        </div>
+      </div>
+  </section>
+</div>
+
+<script>
+  document.querySelectorAll('.faq-question').forEach(button => {
+    button.addEventListener('click', () => {
+      button.classList.toggle('active');
+      const answer = button.nextElementSibling;
+      answer.style.display = answer.style.display === 'block' ? 'none' : 'block';
+    });
+  });
+</script>
+  
+
+
+{% endblock%}

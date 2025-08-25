@@ -1,0 +1,76 @@
+{% extends 'base.html'%}
+
+
+{% block content %}
+
+<style>
+    .resource-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+      }
+      
+      .resource-card {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        padding: 1.5rem;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      
+      .resource-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+      }
+      
+      .resource-card h3 {
+        margin-top: 0;
+        font-size: 1.25rem;
+      }
+      
+      .btn {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #2b4f66;
+        color: #fff;
+        border-radius: 6px;
+        text-decoration: none;
+        margin-top: 1rem;
+      }
+      
+      .btn:hover {
+        background: #0056b3;
+      }
+
+</style>
+
+<div class='content'>
+    <section class="resources">
+        <h2>Resources</h2>
+        <div class="resource-grid">
+          <div class="resource-card">
+            <h3>Source Code</h3>
+            <p>MpoxTDB is open-source. You can check the project on our GitHub</p>
+            <a href="/downloads/code.zip" class="btn">GitHub</a>
+          </div>
+          
+          <div class="resource-card">
+            <h3>API Documentation</h3>
+            <p>Explore our REST API with detailed usage instructions.</p>
+            <a href="{% url 'api_documentation' %}" class="btn">View API documentation</a>
+          </div>
+          
+          <div class="resource-card">
+            <h3>MpoxTDB Data</h3>
+            <p>Complete records of MpoxTDB for download.</p>
+            <a href="/downloads/data.zip" class="btn">CSSRs</a>
+            <a href="/downloads/data.zip" class="btn">SSRs</a><br>
+            <a href="/downloads/data.zip" class="btn">ISSRs</a>
+            <a href="/downloads/data.zip" class="btn">VNTRs</a>
+          </div>
+        </div>
+      </section>
+</div>
+
+
+{% endblock%}

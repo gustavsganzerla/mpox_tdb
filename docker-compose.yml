@@ -9,10 +9,10 @@ services:
       - "8000:8000"
     volumes:
       - ./frontend:/app
-      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/cssr:/data_cssr
-      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/issr:/data_issr
-      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/ssr:/data_ssr
-      - /Users/gustavosganzerla/Documents/mpox_outbreak/ssr_db/data/vntr:/data_vntr
+      - /var/www/mpox_tdb/data/cssr:/data_cssr
+      - /var/www/mpox_tdb/data/issr:/data_issr
+      - /var/www/mpox_tdb/data/ssr:/data_ssr
+      - /var/www/mpox_tdb/data/vntr:/data_vntr
     depends_on:
       - db
     env_file:

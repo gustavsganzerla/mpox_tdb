@@ -51,7 +51,7 @@
           <div class="resource-card">
             <h3>Source Code</h3>
             <p>MpoxTDB is open-source. You can check the project on our GitHub</p>
-            <a href="/downloads/code.zip" class="btn">GitHub</a>
+            <a target="_blank" href="https://github.com/gustavsganzerla/mpox_tdb" class="btn">GitHub</a>
           </div>
           
           <div class="resource-card">
@@ -63,10 +63,10 @@
           <div class="resource-card">
             <h3>MpoxTDB Data</h3>
             <p>Complete records of MpoxTDB for download.</p>
-            <a href="/downloads/data.zip" class="btn">CSSRs</a>
-            <a href="/downloads/data.zip" class="btn">SSRs</a><br>
-            <a href="/downloads/data.zip" class="btn">ISSRs</a>
-            <a href="/downloads/data.zip" class="btn">VNTRs</a>
+            <a href="{% url 'download_data' 'cssr' %}" class="btn">CSSRs</a>
+            <a href="{% url 'download_data' 'issr' %}" class="btn">ISSRs</a>
+            <a href="{% url 'download_data' 'ssr' %}" class="btn">SSRs</a>
+            <a href="{% url 'download_data' 'vntr' %}" class="btn">VNTRs</a>
           </div>
         </div>
       </section>

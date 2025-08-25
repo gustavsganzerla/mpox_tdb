@@ -13,6 +13,7 @@ services:
       - /var/www/mpox_tdb/data/issr:/data_issr
       - /var/www/mpox_tdb/data/ssr:/data_ssr
       - /var/www/mpox_tdb/data/vntr:/data_vntr
+      - /var/www/mpox_tdb/data:/data
     depends_on:
       - db
     env_file:
@@ -30,6 +31,7 @@ services:
       - "5432:5432"
 
 volumes:
+  
   pgdata:
 
 

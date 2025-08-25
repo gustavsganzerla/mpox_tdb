@@ -6,11 +6,15 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.db.models import Q
 from .serializers import CSSRModelSerializer, ISSRModelSerializer, SSRModelSerializer, VNTRModelSerializer
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.views.decorators.http import require_GET
 from .models import CSSR, ISSR, SSR, VNTR
 import csv
 import json
+import io
+import zipfile
+from django.conf import settings
+import os
 
 
 
@@ -129,6 +133,37 @@ def api_documentation(request):
 
 def contact(request):
     return render(request, 'core/contact.html')
+
+
+def download_data(request, option):
+    # Map options to mounted paths inside the container
+    data_paths = {
+        'cssr': '/data_cssr',
+        'issr': '/data_issr',
+        'ssr': '/data_ssr',
+        'vntr': '/data_vntr',
+    }
+
+    folder_path = data_paths.get(option)
+    if not folder_path or not os.path.exists(folder_path):
+        raise Http404("Invalid option or folder not found")
+
+    # Collect files
+    files = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
+    if not files:
+        raise Http404("No files found for this option")
+
+    # Create zip in memory
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, 'w') as zip_file:
+        for filename in files:
+            file_path = os.path.join(folder_path, filename)
+            zip_file.write(file_path, arcname=filename)
+
+    buffer.seek(0)
+    response = HttpResponse(buffer, content_type='application/zip')
+    response['Content-Disposition'] = f'attachment; filename="{option}_data.zip"'
+    return response
 
 ####APIs
 

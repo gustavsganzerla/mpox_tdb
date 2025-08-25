@@ -14,5 +14,6 @@ urlpatterns = [
         path('faq/', views.faq, name='faq'),
         path('resources/', views.resources, name='resources'),
         path('api_documentation/', views.api_documentation, name='api_documentation'),
-        path('contact/', views.contact, name='contact')
+        path('contact/', views.contact, name='contact'),
+        path('download_data/<str:option>/', views.download_data, name='download_data')
 ]

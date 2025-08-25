@@ -99,7 +99,7 @@
 <body>
   <header>
     <h1>API Documentation</h1>
-    <p>Base URL: <code>https://yourdomain.com/api/</code></p>
+    <p>Base URL: <code>https://mpoxtdb.mici.dal.ca/api/</code></p>
   </header>
 
 
@@ -108,59 +108,322 @@
     <!-- Overview -->
     <section>
       <h2>Overview</h2>
-      <p>This API provides access to the database resources used by the system. It supports searching, retrieving, and downloading datasets.</p>
+      <p>
+        This API provides access to the database resources used by the system.
+        It supports searching, retrieving, and listing database entries.
+      </p>
       <ul>
         <li><strong>Format:</strong> JSON</li>
-        <li><strong>Authentication:</strong> Bearer Token (if enabled)</li>
+        <li><strong>Authentication:</strong> Django session with CSRF protection</li>
       </ul>
     </section>
-
+  
     <!-- Authentication -->
     <section>
-      <h2>Authentication</h2>
-      <p>Include your API token in the request header:</p>
-      <pre><code>Authorization: Bearer &lt;your_api_token&gt;</code></pre>
-    </section>
-
+        <h2>Authentication & CSRF Notes</h2>
+        <p>
+          This API is protected using Django session and CSRF for browser-based requests.
+          Please note the following:
+        </p>
+        <ul>
+          <li>
+            <strong>Browser requests (frontend):</strong> For POST, PUT, or DELETE requests
+            from a browser, include the CSRF token in the <code>X-CSRFToken</code> header.
+          </li>
+          <li>
+            <strong>API clients / scripts:</strong> Requests from Python, R, or other servers
+            typically do <em>not</em> require a CSRF token. You just need to provide
+            authentication if the endpoint requires it (session cookie or token, depending on configuration).
+          </li>
+          <li>
+            <strong>GET requests:</strong> Generally safe and do not require CSRF.
+          </li>
+        </ul>
+      
+        <p>
+          Example for a browser POST with CSRF:
+        </p>
+        <pre><code>fetch("/api/gene/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken
+        },
+        body: JSON.stringify({ genome_name: "EPI_ISL_1234567" })
+      });</code></pre>
+      
+        <p>
+          Example for a Python client GET request (no CSRF needed):
+        </p>
+        <pre><code>import requests
+      
+      params = {"genome_name": "EPI_ISL_1234567"}
+      response = requests.get("http://yourserver.com/api/gene/", params=params)
+      print(response.json())</code></pre>
+      </section>
+  
     <!-- Example Endpoint -->
     <section>
-      <h2>Search Endpoint</h2>
-      <div class="endpoint">GET /api/search/</div>
+        <h2>Search Endpoint</h2>
+        <div class="endpoint">POST /api/search/</div>
+      
+        <h3>Overview</h3>
+        <p>
+            The database API is organized by sequence type. Each sequence type has its own endpoint.
+            Requests must use the endpoint corresponding to the type of sequence you want to query.
+          </p>
+          <ul>
+            <li><strong>Format:</strong> JSON</li>
+            <li><strong>Authentication:</strong> Django session with CSRF (for browser) or session cookie</li>
+          </ul>
+          <p>The available types of sequences are:
+            <ul>
+                <li>cssr</li>
+                <li>issr</li>
+                <li>ssr</li>
+                <li>vntr</li>
+            </ul>
+          </p>
 
-      <h3>Parameters</h3>
+
+          
+            <h3>Searchable Fields</h3>
+            <p>
+                Users can provide one or more fields as query parameters to filter results. 
+                The backend will combine these parameters appropriately to return matching entries.
+                </p>
+            <h4>CSSR</h4>
+            <section>
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>sequence</td>
+                  <td>Name of the genome (as registered in GISAID)</td>
+                </tr>
+                <tr>
+                  <td>motif</td>
+                  <td>Nucleotide motifs of the repetitive element</td>
+                </tr>
+                <tr>
+                  <td>start</td>
+                  <td>Genomic coordinates of the start of the element</td>
+                </tr>
+                <tr>
+                    <td>end</td>
+                    <td>Genomic coordinates of the end of the element</td>
+                  </tr>
+                  <tr>
+                    <td>clade</td>
+                    <td>MPXV clade/subclade that the sequence belongs to</td>
+                  </tr>
+                  <tr>
+                    <td>complexity</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>gap</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>component</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>structure</td>
+                    <td>define</td>
+                  </tr>
+              </tbody>
+
+            </table>
+        </section>
+        <h4>ISSR</h4>
+            <section>
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>sequence</td>
+                  <td>Name of the genome (as registered in GISAID)</td>
+                </tr>
+                <tr>
+                  <td>motif</td>
+                  <td>Nucleotide motifs of the repetitive element</td>
+                </tr>
+                <tr>
+                  <td>start</td>
+                  <td>Genomic coordinates of the start of the element</td>
+                </tr>
+                <tr>
+                    <td>end</td>
+                    <td>Genomic coordinates of the end of the element</td>
+                  </tr>
+                  <tr>
+                    <td>clade</td>
+                    <td>MPXV clade/subclade that the sequence belongs to</td>
+                  </tr>
+                  <tr>
+                    <td>standard</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>type</td>
+                    <td>Number of nucleotides that compose the regions (mono, di, tri, tetra, penta, hexa, all)</td>
+                  </tr>
+                  <tr>
+                    <td>match</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>substitution</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>insertion</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>deletion</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>score</td>
+                    <td>define</td>
+                  </tr>
+              </tbody>
+
+            </table>
+        </section>
+        <h4>SSR</h4>
+            <section>
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>sequence</td>
+                  <td>Name of the genome (as registered in GISAID)</td>
+                </tr>
+                <tr>
+                  <td>motif</td>
+                  <td>Nucleotide motifs of the repetitive element</td>
+                </tr>
+                <tr>
+                  <td>start</td>
+                  <td>Genomic coordinates of the start of the element</td>
+                </tr>
+                <tr>
+                    <td>end</td>
+                    <td>Genomic coordinates of the end of the element</td>
+                  </tr>
+                  <tr>
+                    <td>clade</td>
+                    <td>MPXV clade/subclade that the sequence belongs to</td>
+                  </tr>
+                  <tr>
+                    <td>standard</td>
+                    <td>define</td>
+                  </tr>
+                  <tr>
+                    <td>type</td>
+                    <td>Number of nucleotides that compose the regions (mono, di, tri, tetra, penta, hexa, all)</td>
+                  </tr>
+                  <tr>
+                    <td>repeat</td>
+                    <td>define</td>
+                  </tr>
+              </tbody>
+            </table>
+        </section>
+
+        <h4>VNTR</h4>
+        <section>
+        <table>
+          <thead>
+            <tr>
+              <th>Field</th>
+              <th>Description</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>sequence</td>
+              <td>Name of the genome (as registered in GISAID)</td>
+            </tr>
+            <tr>
+              <td>motif</td>
+              <td>Nucleotide motifs of the repetitive element</td>
+            </tr>
+            <tr>
+              <td>start</td>
+              <td>Genomic coordinates of the start of the element</td>
+            </tr>
+            <tr>
+                <td>end</td>
+                <td>Genomic coordinates of the end of the element</td>
+              </tr>
+              <tr>
+                <td>clade</td>
+                <td>MPXV clade/subclade that the sequence belongs to</td>
+              </tr>
+              <tr>
+                <td>type</td>
+                <td>Number of nucleotides that compose the regions (mono, di, tri, tetra, penta, hexa, all)</td>
+              </tr>
+              <tr>
+                <td>repeat</td>
+                <td>define</td>
+              </tr>
+          </tbody>
+
+        </table>
+    </section>
+          <h5>Example Request</h5>
+          <pre><code>POST /api/search/
+      Content-Type: application/json
+      
+      {
+        "sequence_type": "ssr",
+        "genome_name": "hMpxV/DRC/INRB-3448V/2024|EPI_ISL_19858625|2024-09-20"
+      }
+      </code></pre>
+
+      <pre><code>POST /api/search/
+        Content-Type: application/json
+        
+        {
+          "sequence_type": "vntr",
+          "clade": "1b"
+        }
+        </code></pre>
+
+  
+    <!-- Notes -->
+    <section>
+      <h2>Notes</h2>
       <ul>
-        <li><code>q</code> (string, required) — Search keyword</li>
-        <li><code>limit</code> (integer, optional, default: 20) — Max results</li>
-        <li><code>offset</code> (integer, optional, default: 0) — Pagination</li>
+        <li>All endpoints currently require a valid Django session cookie for write operations.</li>
+        <li>Read-only endpoints may work without CSRF depending on your settings.</li>
+        <li>For scripts or external programs, obtain a session cookie and CSRF token via the login endpoint.</li>
+        <li>Future updates may include API token authentication to simplify external integration.</li>
       </ul>
-
-      <h3>Example Request</h3>
-      <pre><code>GET /api/search/?q=geneX&amp;limit=10</code></pre>
-
-      <h3>Example Response</h3>
-      <pre><code>{
-  "count": 2,
-  "results": [
-    {
-      "id": 123,
-      "name": "GeneX",
-      "description": "Protein related to metabolism",
-      "created_at": "2025-08-21T10:12:00Z"
-    },
-    {
-      "id": 124,
-      "name": "GeneX2",
-      "description": "Homolog of GeneX",
-      "created_at": "2025-08-21T10:15:00Z"
-    }
-  ]
-}</code></pre>
-
-      <h3>Errors</h3>
-      <div class="error">400 Bad Request — Missing query parameter</div>
-      <div class="error">404 Not Found — No results found</div>
     </section>
   </main>
+  
 </body>
 </html>
 </div>
